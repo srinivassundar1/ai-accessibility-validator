@@ -1,0 +1,121 @@
+"""Report generation for accessibility findings."""
+
+from __future__ import annotations
+
+import json
+from datetime import datetime, timezone
+from pathlib import Path
+
+from a11y_validator.models import A11yFinding, A11yReport, Severity
+
+
+def generate_report(report: A11yReport, output_path: str, fmt: str = "html") -> None:
+    if fmt == "json":
+        _generate_json(report, output_path)
+    elif fmt == "html":
+        _generate_html(report, output_path)
+    else:
+        raise ValueError(f"Unsupported format: {fmt}")
+
+
+def _generate_json(report: A11yReport, output_path: str) -> None:
+    data = {
+        "scan_date": datetime.now(timezone.utc).isoformat(),
+        "url_or_file": report.url_or_file,
+        "elements_checked": report.total_elements_checked,
+        "total_findings": len(report.findings),
+        "pass_rate": round(report.pass_rate, 4),
+        "summary": {
+            "critical": report.critical_count,
+            "serious": report.serious_count,
+            "moderate": sum(1 for f in report.findings if f.severity == Severity.MODERATE),
+            "minor": sum(1 for f in report.findings if f.severity == Severity.MINOR),
+        },
+        "findings": [
+            {
+                "rule_id": f.rule_id,
+                "severity": f.severity.value,
+                "description": f.description,
+                "remediation": f.remediation,
+                "wcag_criterion": f.wcag_criterion,
+                "section_508_ref": f.section_508_ref,
+                "element": f.element,
+                "selector": f.selector,
+                "source": f.source,
+                "suggested_fix": f.suggested_fix,
+            }
+            for f in report.findings
+        ],
+    }
+    Path(output_path).write_text(json.dumps(data, indent=2))
+
+
+def _severity_color(severity: Severity) -> str:
+    return {
+        Severity.CRITICAL: "#dc2626",
+        Severity.SERIOUS: "#ea580c",
+        Severity.MODERATE: "#ca8a04",
+        Severity.MINOR: "#2563eb",
+    }[severity]
+
+
+def _generate_html(report: A11yReport, output_path: str) -> None:
+    findings_html = ""
+    for f in sorted(report.findings, key=lambda x: list(Severity).index(x.severity)):
+        color = _severity_color(f.severity)
+        element_html = f"<pre>{f.element}</pre>" if f.element else ""
+        fix_html = f"<p style='color:#059669;'><strong>Suggested Fix:</strong> {f.suggested_fix}</p>" if f.suggested_fix else ""
+        findings_html += f"""
+        <div class="finding" style="border-left: 4px solid {color}; padding: 12px; margin: 8px 0; background: #fafafa;">
+            <div style="display: flex; justify-content: space-between;">
+                <strong>{f.rule_id}</strong>
+                <span style="color: {color}; font-weight: bold;">{f.severity.value.upper()}</span>
+            </div>
+            <p>{f.description}</p>
+            <p><strong>WCAG:</strong> {f.wcag_criterion}</p>
+            {f'<p><strong>Section 508:</strong> {f.section_508_ref}</p>' if f.section_508_ref else ''}
+            {f'<p><strong>Selector:</strong> <code>{f.selector}</code></p>' if f.selector else ''}
+            {element_html}
+            <p style="color: #16a34a;"><strong>Remediation:</strong> {f.remediation}</p>
+            {fix_html}
+        </div>"""
+
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Accessibility Audit Report</title>
+    <style>
+        body {{ font-family: -apple-system, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; }}
+        .summary {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; }}
+        .card {{ padding: 16px; border-radius: 8px; color: white; text-align: center; }}
+        pre {{ background: #f1f5f9; padding: 8px; border-radius: 4px; overflow-x: auto; font-size: 0.85em; }}
+        code {{ background: #f1f5f9; padding: 2px 6px; border-radius: 3px; }}
+    </style>
+</head>
+<body>
+    <h1>♿ Accessibility Audit Report</h1>
+    <p><strong>Source:</strong> {report.url_or_file}</p>
+    <p><strong>Date:</strong> {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}</p>
+    <p><strong>Elements Checked:</strong> {report.total_elements_checked}</p>
+    <p><strong>Pass Rate:</strong> {report.pass_rate:.0%}</p>
+
+    <div class="summary">
+        <div class="card" style="background: #dc2626;"><h2>{report.critical_count}</h2>Critical</div>
+        <div class="card" style="background: #ea580c;"><h2>{report.serious_count}</h2>Serious</div>
+        <div class="card" style="background: #ca8a04;"><h2>{sum(1 for f in report.findings if f.severity == Severity.MODERATE)}</h2>Moderate</div>
+        <div class="card" style="background: #2563eb;"><h2>{sum(1 for f in report.findings if f.severity == Severity.MINOR)}</h2>Minor</div>
+    </div>
+
+    <h2>Findings ({len(report.findings)} total)</h2>
+    {findings_html}
+
+    <hr>
+    <p style="color: #6b7280; font-size: 0.85em;">
+        Generated by AI Accessibility Validator v0.1.0 |
+        Standards: WCAG 2.1 AA, Section 508 |
+        <a href="https://www.w3.org/TR/WCAG21/">WCAG Reference</a>
+    </p>
+</body>
+</html>"""
+    Path(output_path).write_text(html)
