@@ -9,7 +9,7 @@ description = "AI-powered website accessibility validator for Section 508 and WC
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "Apache-2.0"}
-authors = [{name = "Your Name", email = "you@example.com"}]
+authors = [{name = "Srinivas Sundar"}]
 keywords = ["accessibility", "wcag", "section-508", "a11y", "ai", "ada"]
 dependencies = [
     "click>=8.0",

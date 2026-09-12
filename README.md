@@ -2,7 +2,7 @@
 
 > AI-powered website accessibility validator that combines static DOM analysis with vision model intelligence to evaluate Section 508 and WCAG 2.1 compliance.
 
-[![CI](https://github.com/your-org/ai-accessibility-validator/actions/workflows/ci.yml/badge.svg)]()
+[![CI](https://github.com/srinivassundar1/ai-accessibility-validator/actions/workflows/ci.yml/badge.svg)]()
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)]()
 
