@@ -6,7 +6,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-from a11y_validator.models import A11yFinding, A11yReport, Severity
+from a11y_validator.models import A11yReport, Severity
 
 
 def generate_report(report: A11yReport, output_path: str, fmt: str = "html") -> None:
