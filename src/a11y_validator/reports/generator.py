@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from a11y_validator.models import A11yReport, Severity
@@ -20,7 +20,7 @@ def generate_report(report: A11yReport, output_path: str, fmt: str = "html") -> 
 
 def _generate_json(report: A11yReport, output_path: str) -> None:
     data = {
-        "scan_date": datetime.now(timezone.utc).isoformat(),
+        "scan_date": datetime.now(UTC).isoformat(),
         "url_or_file": report.url_or_file,
         "elements_checked": report.total_elements_checked,
         "total_findings": len(report.findings),
@@ -96,7 +96,7 @@ def _generate_html(report: A11yReport, output_path: str) -> None:
 <body>
     <h1>♿ Accessibility Audit Report</h1>
     <p><strong>Source:</strong> {report.url_or_file}</p>
-    <p><strong>Date:</strong> {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}</p>
+    <p><strong>Date:</strong> {datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')}</p>
     <p><strong>Elements Checked:</strong> {report.total_elements_checked}</p>
     <p><strong>Pass Rate:</strong> {report.pass_rate:.0%}</p>
 

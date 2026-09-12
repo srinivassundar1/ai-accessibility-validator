@@ -8,13 +8,13 @@ from a11y_validator.reports.generator import generate_report
 
 
 def _make_finding(**overrides) -> A11yFinding:
-    defaults = dict(
-        rule_id="WCAG-1.1.1-img-alt",
-        severity=Severity.CRITICAL,
-        description="Image missing alt",
-        remediation="Add alt attribute",
-        wcag_criterion="1.1.1 Non-text Content",
-    )
+    defaults = {
+        "rule_id": "WCAG-1.1.1-img-alt",
+        "severity": Severity.CRITICAL,
+        "description": "Image missing alt",
+        "remediation": "Add alt attribute",
+        "wcag_criterion": "1.1.1 Non-text Content",
+    }
     defaults.update(overrides)
     return A11yFinding(**defaults)
 
